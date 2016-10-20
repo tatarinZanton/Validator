@@ -7,7 +7,7 @@ $(document).ready(function(){
 					"passwd": "[name=passwd]"	
 					},
 		confLength:{
-					"default" : [-4, 12],
+					"default" : [4, 12],
 					"passwd"  : [8, 32],
 					// "asdfdsdf": [3,5]
 		},

@@ -57,11 +57,11 @@
 		this.min = 6;
 		this.max = 25;
 		this.configure = undefined;
+		this.messageElem = "<span>";
 
 		// Сообщения по-умолчанию
 		this.errEmpty = "Поле не заполнено";
-		this.errLengthMax= "Длинна поля больше максимальной";
-		this.errLengthMin= "Длинна поля меньше минимальной";
+		this.errLength= "Допустимое кол-во символов";
 		this.errLogin = "Ошибка логина";
 		this.errPasswd = "Ошибка пароля";
 		this.errEmail = "Ошибка email";
@@ -78,7 +78,8 @@
 
 		var classes  = data.classes,
 			messages = data.messages,
-	  		confLength = data.confLength;
+	  		confLength = data.confLength,
+	  		formField;
 
 	  	if (checkLengthValues(confLength)) {
 		  	for (var rule in confLength) {
@@ -86,6 +87,7 @@
 		  			case "default":
 		  				this.min = confLength.default[0];
 		  				this.max = confLength.default[1];
+		  				
 						break;
 		  			case "login":
 						this.minLoginLength = confLength.login[0];
@@ -115,7 +117,14 @@
 		  	}
 	  	}
 
+	  	// окончательно формируем сообщение об ошибке длинны
+	  	this.errLength = this.errLength + this.min + "-" + this.max;
+
+	  	// назначаем обработчики на blur и focus
 		for (var rule in this.configure) {
+			$(this.configure[rule]).on("focus", function(){
+				self.resetField($(this));
+			})
 			switch(rule){
 				case "login":
 					$(this.configure.login).on("blur", function(){
@@ -149,9 +158,11 @@
 			}
 		}
 
+		// формируем обработчик submit
 		this.form.on("submit", function(event){
 			var result = true;
 			for (var rule in self.configure) {
+				self.resetField($(self.configure[rule]));
 				switch(rule){
 					case "login":
 						if (!self.checkLogin($(self.configure.login))) {
@@ -189,26 +200,70 @@
 	Validator.prototype.checkLogin = function(elem){
 
 		if(self.checkEmpty(elem)){
-			
-			return true;
+			if (self.checkLength(elem)) {
+				return true;
+			}
 		}
-		
 		return false;
 		
 	} // login
-	Validator.prototype.checkPasswd = function(){} // passwd
-	Validator.prototype.checkEmail = function(){} // email
-	Validator.prototype.checkTel = function(){} //tel
-	Validator.prototype.checkText = function(){} // text
+	Validator.prototype.checkPasswd = function(elem){
+		if(self.checkEmpty(elem)){
+			if (self.checkLength(elem)) {
+				return true;
+			}
+		}
+		return false;
+	} // passwd
+	Validator.prototype.checkEmail = function(elem){
+		if(self.checkEmpty(elem)){
+			if (self.checkLength(elem)) {
+				return true;
+			}
+		}
+		return false;
+	} // email
+	Validator.prototype.checkTel = function(elem){
+		if(self.checkEmpty(elem)){
+			if (self.checkLength(elem)) {
+				return true;
+			}
+		}
+		return false;
+	} //tel
+	Validator.prototype.checkText = function(elem){
+		if(self.checkEmpty(elem)){
+			if (self.checkLength(elem)) {
+				return true;
+			}
+		}
+		return false;
+	} // text
 
 	Validator.prototype.checkEmpty = function(elem){
 		if (elem.val() === "") {
 			elem.addClass(self.errorClass);
+			elem.after($(self.messageElem).text(self.errEmpty));
 			return false;
 		}
 		return true;
 	}
-	Validator.prototype.checkLength = function(){}
+
+	Validator.prototype.checkLength = function(elem){
+		if (elem.val().length < this.min || elem.val().length > this.max) {
+			elem.addClass(self.errorClass);
+			elem.after($(self.messageElem).text(self.errLength));
+			return false;
+		}
+		return true;
+	}
+
+	Validator.prototype.resetField = function(elem){
+		if (elem.hasClass(self.errorClass)) {
+			elem.removeClass(self.errorClass);
+			elem.next().remove();
+		}
+	} 
 
 	function make(form){
 		var tmp = new Validator(form);
